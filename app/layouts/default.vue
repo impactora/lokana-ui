@@ -1,6 +1,4 @@
-<script setup lang="ts">
-import SideBar from "@/components/SideBar.vue";
-</script>
+<script setup lang="ts"></script>
 
 <template>
     <div
@@ -11,8 +9,10 @@ import SideBar from "@/components/SideBar.vue";
                 Lokana
             </header>
 
+            <div class="loading-overlay" id="loadingOverlay"></div>
+
             <div class="w-full flex flex-1 items-start gap-4 min-h-0 px-2">
-                <aside class="w-85 h-full overflow-hidden">
+                <aside id="sidebar" class="w-85 h-full overflow-hidden">
                     <SideBar />
                 </aside>
 

@@ -1,7 +1,20 @@
 <script setup lang="ts">
-import Card from "./ui/Card.vue";
+import { ref } from "vue";
 
-const filter = ["Semua", "Artefak", "Arca", "Prasasti", "Koleksi"];
+const filter = [
+    "Semua",
+    "Arca",
+    "Prasasti",
+    "Senjata",
+    "Tekstil",
+    "Keramik",
+    "Fosil",
+    "Perhiasan",
+    "Manuskrip",
+    "Alat Musik",
+    "Lainnya",
+];
+const search = ref("");
 </script>
 
 <template>
@@ -20,13 +33,24 @@ const filter = ["Semua", "Artefak", "Arca", "Prasasti", "Koleksi"];
             </div>
 
             <div class="flex flex-col gap-4">
-                <UDashboardSearchButton
+                <UInput
+                    id="searchInput"
+                    v-model="search"
+                    icon="i-heroicons-magnifying-glass-20-solid"
+                    placeholder="Cari peninggalan..."
                     class="w-full"
-                    :kbds="['ctrl', 's']"
                     :ui="{ base: 'bg-background text-black' }"
                 />
-                <div class="grid grid-cols-3 gap-2">
-                    <UButton v-for="item in filter" :key="item" class="mr-2">
+                <div class="flex flex-wrap gap-2">
+                    <UButton
+                        v-for="item in filter"
+                        :key="item"
+                        class="mr-1 filter-chip cursor-pointer flex-1"
+                        :data-filter="
+                            item === 'Semua' ? 'all' : item.toLowerCase()
+                        "
+                        variant="soft"
+                    >
                         {{ item }}
                     </UButton>
                 </div>
@@ -37,17 +61,16 @@ const filter = ["Semua", "Artefak", "Arca", "Prasasti", "Koleksi"];
         <!-- Content -->
         <div class="flex flex-col gap-4 flex-1 min-h-0">
             <div
+                id="statsInfo"
                 class="bg-[#E0DDD5] p-5 flex justify-between text-xs rounded-xl"
             >
-                <h2 class="text-[#64748B]">
-                    <span class="text-[#2C5F4F]">2</span> Peninggalan ditemukan
-                </h2>
-                <div class="text-[#64748B]">Semua Lokasi</div>
+                Loading stats...
             </div>
-            <div class="flex flex-col gap-4 overflow-y-auto pr-2">
-                <Card />
-                <Card />
-            </div>
+
+            <div
+                id="artifactList"
+                class="flex flex-col gap-4 overflow-y-auto pr-2"
+            ></div>
         </div>
     </div>
 </template>

@@ -12,6 +12,8 @@ let searchQuery = "";
 export default async function initMap() {
   if (typeof window === "undefined") return;
 
+  renderArtifactList();
+
   const L = (await import("leaflet")).default;
   map = L.map("map").setView([-2.5489, 118.0149], 5);
 
@@ -20,6 +22,7 @@ export default async function initMap() {
     maxZoom: 19,
   }).addTo(map);
 
+  addMuseumMarkers();
   requestGeolocation();
   initUI();
 }
@@ -168,30 +171,60 @@ async function addMuseumMarkers() {
 
     // Popup showing all artifacts at this museum
     const popupContent = `
-                      <div class="popup-content">
-                          <div class="popup-museum-name">
-                              🏛️ ${data.museum.name}
-                          </div>
-                          <div class="popup-collections">
-                              <div class="popup-collection-title">
-                                  Koleksi di museum ini (${data.artifacts.length}):
-                              </div>
-                              ${data.artifacts
-                                .map(
-                                  (artifact: any) => `
-                                  <div class="popup-artifact-item" onclick="highlightArtifactCard(${artifact.id})">
-                                      <img src="${artifact.image}" alt="${artifact.name}" class="popup-artifact-thumb">
-                                      <div class="popup-artifact-info">
-                                          <div class="popup-artifact-name">${artifact.name}</div>
-                                          <div class="popup-artifact-type">${artifact.type.toUpperCase()} • ${artifact.period}</div>
-                                      </div>
-                                  </div>
-                              `,
-                                )
-                                .join("")}
-                          </div>
-                      </div>
-                  `;
+        <div class="min-w-[240px] max-w-[280px]">
+            <div class="flex items-center gap-2 border-b border-gray-100 pb-3 mb-2">
+                <span class="text-xl">🏛️</span>
+                <div>
+                    <h3 class="font-bold text-gray-900 text-sm leading-tight">
+                        ${data.museum.name}
+                    </h3>
+                    <p class="text-[10px] text-gray-500 mt-0.5">
+                        ${data.museum.province || "Lokasi Museum"}
+                    </p>
+                </div>
+            </div>
+
+            <div>
+                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 pl-1">
+                    Koleksi di sini (${data.artifacts.length})
+                </div>
+
+                <div class="flex flex-col gap-1 max-h-[220px] overflow-y-auto pr-1">
+                    ${data.artifacts
+                      .map(
+                        (artifact: any) => `
+                        <div
+                            class="group flex items-center gap-3 p-2 rounded-lg hover:bg-emerald-50 cursor-pointer transition-all border border-transparent hover:border-emerald-100"
+                            onclick="highlightArtifactCard(${artifact.id})"
+                        >
+                            <div class="relative w-10 h-10 shrink-0 overflow-hidden rounded-md bg-gray-100 shadow-sm">
+                                <img
+                                    src="${artifact.image}"
+                                    alt="${artifact.name}"
+                                    class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                >
+                            </div>
+
+                            <div class="flex flex-col min-w-0">
+                                <div class="text-xs font-semibold text-gray-800 truncate group-hover:text-emerald-700">
+                                    ${artifact.name}
+                                </div>
+                                <div class="text-[10px] text-gray-500 truncate mt-0.5">
+                                    <span class="bg-gray-100 px-1 rounded text-gray-600 group-hover:bg-emerald-100 group-hover:text-emerald-800 transition-colors">
+                                        ${artifact.type.toUpperCase()}
+                                    </span>
+                                    <span class="mx-1">•</span>
+                                    ${artifact.period}
+                                </div>
+                            </div>
+                        </div>
+                    `,
+                      )
+                      .join("")}
+                </div>
+            </div>
+        </div>
+    `;
 
     marker.bindPopup(popupContent, { maxWidth: 320 });
     markers[key] = marker;
@@ -227,45 +260,75 @@ function renderArtifactList() {
   // Update stats
   statsInfo.innerHTML = `
         <span><span class="stats-number">${artifactsWithDistance.length}</span> peninggalan ditemukan</span>
-        <span id="locationText">${userLocation ? "📍 Terdekat dulu" : "📍 Semua lokasi"}</span>
+        <span id="locationText">${userLocation ? "Terdekat dulu" : "Semua lokasi"}</span>
     `;
 
   // Render cards
   listContainer.innerHTML = artifactsWithDistance
     .map(
       (artifact) => `
-        <div class="artifact-card" data-id="${artifact.id}" onclick="focusOnArtifact(${artifact.id})">
-            <div class="artifact-header">
-                <img src="${artifact.image}" alt="${artifact.name}" class="artifact-image">
-                <div class="artifact-info">
-                    <div class="artifact-name">${artifact.name}</div>
-                    <div class="artifact-meta">
-                        <span class="artifact-type">${artifact.type.toUpperCase()}</span>
-                        <span class="artifact-period">${artifact.period}</span>
-                    </div>
-                </div>
-            </div>
-            <div class="artifact-description">${artifact.description}</div>
-            <div class="artifact-museum">
-                <span class="museum-icon">🏛️</span>
-                <div class="museum-info">
-                    <div class="museum-name">${artifact.museum.name}</div>
-                    <div class="museum-distance">
-                        ${
-                          artifact.distance
-                            ? `📍 ${artifact.distance.toFixed(1)} km dari Anda`
-                            : `📍 ${artifact.museum.province}`
-                        }
-                    </div>
-                </div>
-            </div>
-            <div class="artifact-footer">
-                <button class="btn btn-primary" onclick="showMuseumOnMap(${artifact.id}); event.stopPropagation();">
-                    📍 Lihat Lokasi Museum
-                </button>
-            </div>
-        </div>
-    `,
+          <div
+              class="group relative flex flex-col gap-3 p-4 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer"
+              data-id="${artifact.id}"
+              onclick="window.focusOnArtifact(${artifact.id})"
+          >
+              <div class="flex gap-4">
+                  <div class="relative w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-gray-100 border border-gray-100">
+                      <img
+                          src="${artifact.image}"
+                          alt="${artifact.name}"
+                          class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      >
+                  </div>
+
+                  <div class="flex flex-col flex-1 min-w-0 justify-between py-0.5">
+                      <div>
+                          <h3 class="font-bold text-gray-900 leading-tight group-hover:text-emerald-700 transition-colors line-clamp-2">
+                              ${artifact.name}
+                          </h3>
+                      </div>
+
+                      <div class="flex flex-wrap gap-1.5 mt-1">
+                          <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-600 border border-gray-200 uppercase tracking-wide">
+                              ${artifact.type}
+                          </span>
+                          <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-100">
+                              ${artifact.period}
+                          </span>
+                      </div>
+                  </div>
+              </div>
+
+              <p class="text-xs text-gray-600 leading-relaxed line-clamp-4 border-b border-dashed border-gray-100 pb-3">
+                  ${artifact.description}
+              </p>
+
+              <div class="flex items-center justify-between gap-2 mt-auto">
+                  <div class="flex items-center gap-2 min-w-0">
+                      <span class="text-lg shrink-0">🏛️</span>
+                      <div class="flex flex-col min-w-0">
+                          <span class="text-[10px] font-bold text-gray-900 truncate">
+                              ${artifact.museum.name}
+                          </span>
+                          <span class="text-[10px] text-emerald-600 font-medium truncate flex items-center gap-1">
+                              ${
+                                artifact.distance
+                                  ? `<span class="w-1 h-1 rounded-full bg-emerald-500"></span> ${artifact.distance.toFixed(1)} km`
+                                  : `<span class="w-1 h-1 rounded-full bg-gray-400"></span> ${artifact.museum.province}`
+                              }
+                          </span>
+                      </div>
+                  </div>
+
+                  <button
+                      class="shrink-0 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 text-[10px] font-bold border border-emerald-100 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all active:scale-95 z-10"
+                      onclick="window.showMuseumOnMap(${artifact.id}); event.stopPropagation();"
+                  >
+                      LIHAT PETA
+                  </button>
+              </div>
+          </div>
+      `,
     )
     .join("");
 }

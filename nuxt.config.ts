@@ -9,4 +9,7 @@ export default defineNuxtConfig({
     plugins: [tailwindcss()],
   },
   modules: ["@nuxt/ui", "@nuxt/image"],
+  routeRules: {
+    "/": { ssr: false },
+  },
 });
